@@ -11,6 +11,7 @@ fn main() {
         .add_plugins((DefaultPlugins, Wireframe2dPlugin))
         .add_systems(Startup, setup)
         .add_systems(Update, toggle_wireframe)
+        .add_systems(Update, close_on_esc)
         .run();
 }
 
@@ -57,15 +58,20 @@ fn setup(
         ));
     }
 
-    commands.spawn((
-        Text::new("Press space to toggle wireframes"),
-        Node {
+    commands
+        .spawn(Node {
             position_type: PositionType::Absolute,
             top: Val::Px(12.0),
             left: Val::Px(12.0),
+            align_items: AlignItems::Start,
+            flex_direction: FlexDirection::Column,
+            row_gap: Val::Px(12.0),
             ..default()
-        },
-    ));
+        })
+        .with_children(|parent| {
+            parent.spawn((Text::new("Press <SPACE> to toggle wireframes"),));
+            parent.spawn((Text::new("Press <ESC> to exit"),));
+        });
 }
 
 fn toggle_wireframe(
@@ -74,5 +80,11 @@ fn toggle_wireframe(
 ) {
     if keyboard.just_pressed(KeyCode::Space) {
         wireframe_config.global = !wireframe_config.global;
+    }
+}
+
+fn close_on_esc(mut commands: Commands, keyboard: Res<ButtonInput<KeyCode>>) {
+    if keyboard.just_pressed(KeyCode::Escape) {
+        commands.send_event(AppExit::default());
     }
 }
